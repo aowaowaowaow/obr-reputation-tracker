@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Пепел и Пустота — Летопись Репутации</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Spectral:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #16130f;
+    --panel: #221d17;
+    --panel-edge: #332b21;
+    --bone: #d9d2c2;
+    --bone-dim: #8c8578;
+    --ember: #8a2e22;
+    --ember-glow: #c8553d;
+    --ember-soft: #4a251d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--void);
+    color: var(--bone);
+    font-family: 'Spectral', serif;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px 96px;
+  }
+
+  .ash-field {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .ash-mote {
+    position: absolute;
+    top: -5%;
+    width: 3px;
+    height: 3px;
+    background: var(--bone-dim);
+    border-radius: 50%;
+    opacity: 0.35;
+    animation: fall linear infinite;
+  }
+  @keyframes fall {
+    from { transform: translateY(0) translateX(0); }
+    to   { transform: translateY(110vh) translateX(var(--drift, 20px)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ash-mote { animation: none; display: none; }
+  }
+
+  header {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    color: var(--bone);
+    text-shadow: 0 0 24px rgba(200, 85, 61, 0.15);
+  }
+  .subhead {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--bone-dim);
+    font-style: italic;
+  }
+  .role-badge {
+    display: inline-block;
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--panel-edge);
+    border-radius: 20px;
+    color: var(--bone-dim);
+  }
+  .role-badge.gm {
+    color: var(--ember-glow);
+    border-color: var(--ember-soft);
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 880px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .panel.active { display: flex; }
+
+  .settlements-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .card {
+    background: linear-gradient(180deg, var(--panel) 0%, #1c1712 100%);
+    border: 1px solid var(--panel-edge);
+    border-radius: 3px;
+    padding: 20px 18px;
+    position: relative;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--ember-soft), transparent);
+  }
+  .card.unknown { opacity: 0.7; }
+
+  .card-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 2px;
+  }
+  .card-name {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+  }
+  .card-remove {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--bone-dim);
+    background: none;
+    border: 1px solid var(--panel-edge);
+    border-radius: 3px;
+    padding: 3px 7px;
+    cursor: pointer;
+    display: none;
+  }
+  .card-remove:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
+  .gm-mode .card-remove { display: inline-block; }
+
+  .card-layer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--bone-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+  .cell {
+    flex: 1;
+    height: 24px;
+    background: #0f0c09;
+    border: 1px solid var(--panel-edge);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.25s ease, box-shadow 0.25s ease;
+  }
+  .cell.filled {
+    background: linear-gradient(180deg, var(--ember-glow), var(--ember));
+    box-shadow: 0 0 10px rgba(200, 85, 61, 0.45);
+    border-color: var(--ember-glow);
+  }
+  body:not(.gm-mode) .cell { cursor: default; }
+
+  .bar-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .bar-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--bone-dim);
+  }
+  .bar-value b { color: var(--ember-glow); font-weight: 700; }
+  .bar-label {
+    font-family: 'Spectral', serif;
+    font-size: 12px;
+    font-style: italic;
+    color: var(--bone-dim);
+  }
+
+  .unknown-mark {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 30px;
+    text-align: center;
+    color: var(--bone-dim);
+    letter-spacing: 0.3em;
+  }
+
+  .add-card {
+    align-self: center;
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    background: rgba(34,29,23,0.4);
+    border: 1px dashed var(--panel-edge);
+    border-radius: 3px;
+    padding: 14px;
+    cursor: pointer;
+    display: none;
+  }
+  .gm-mode .add-card { display: block; }
+  .add-card:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
+
+  .stamp {
+    align-self: center;
+    margin-top: 8px;
+    text-align: center;
+    padding: 32px 40px;
+    border: 1px dashed var(--panel-edge);
+    border-radius: 3px;
+    background: rgba(34, 29, 23, 0.4);
+  }
+  .stamp-word {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 26px;
+    letter-spacing: 0.15em;
+    color: var(--ember-glow);
+    transform: rotate(-4deg);
+    display: inline-block;
+    text-transform: uppercase;
+  }
+  .stamp-sub {
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--bone-dim);
+    text-transform: uppercase;
+  }
+
+  nav.tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    background: linear-gradient(0deg, var(--void) 60%, transparent);
+    padding: 18px 16px 16px;
+  }
+  .tabs-inner {
+    display: flex;
+    gap: 2px;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .tab-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    background: transparent;
+    border: none;
+    padding: 11px 20px;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
+  }
+  .tab-btn:hover { color: var(--bone); }
+  .tab-btn.active { color: var(--bone); background: var(--ember-soft); }
+
+  .sync-note {
+    position: relative;
+    z-index: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--bone-dim);
+    text-align: center;
+    margin-top: 4px;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="ash-field" id="ashField"></div>
+
+<header>
+  <div class="eyebrow">Пепел и Пустота — учёт отношений</div>
+  <h1>Летопись Репутации</h1>
+  <div class="subhead">Каждое поселение помнит по-своему. Заслужи или потеряй.</div>
+  <div class="role-badge" id="roleBadge">Проверка роли…</div>
+</header>
+
+<main>
+  <section class="panel active" id="panel-settlements">
+    <div class="settlements-grid" id="settlementsGrid"></div>
+    <button class="add-card" id="addSettlement">+ добавить поселение</button>
+  </section>
+
+  <section class="panel" id="panel-factions">
+    <div class="settlements-grid" id="factionsGrid"></div>
+    <button class="add-card" id="addFaction">+ добавить гильдию</button>
+  </section>
+</main>
+
+<div class="sync-note">Синхронизировано со всеми участниками сцены</div>
+
+<nav class="tabs">
+  <div class="tabs-inner">
+    <button class="tab-btn active" data-panel="panel-settlements">Поселения</button>
+    <button class="tab-btn" data-panel="panel-factions">Гильдии</button>
+  </div>
+</nav>
+
+<script type="module">
+import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2";
+
+const METADATA_KEY = "com.ashvoid.reputation-tracker/data";
+const labels = [
+  'Враждебность', 'Враждебность', 'Настороженность', 'Настороженность',
+  'Настороженность', 'Нейтралитет', 'Нейтралитет', 'Доверие',
+  'Доверие', 'Преданность'
+];
+
+const defaultState = {
+  settlements: [
+    { id: cryptoId(), name: 'Зольная Впадина', layer: 'Слой 0 · Родина партии', max: 10, value: 4, known: true },
+    { id: cryptoId(), name: '???', layer: 'Слой 1 · Неизведано', max: 10, value: 0, known: false }
+  ],
+  factions: []
+};
+
+function cryptoId() {
+  return 'id-' + Math.random().toString(36).slice(2, 10);
+}
+
+let state = null;
+let isGM = false;
+
+function labelFor(value) {
+  return value > 0 ? (labels[value - 1] || '') : 'Неизвестность';
+}
+
+function cardHTML(entry, kind) {
+  if (!entry.known) {
+    return `
+      <div class="card unknown" data-id="${entry.id}">
+        <div class="card-name-row">
+          <div class="card-name">???</div>
+          <button class="card-remove" data-remove="${entry.id}" data-kind="${kind}">убрать</button>
+        </div>
+        <div class="card-layer">${escapeHtml(entry.layer || '')}</div>
+        <div class="unknown-mark">— — —</div>
+        <div class="bar-footer" style="margin-top:14px;">
+          <span class="bar-value">Данных нет</span>
+          <span class="bar-label">Откроется по прибытии</span>
+        </div>
+      </div>`;
+  }
+  const cells = Array.from({ length: entry.max }, (_, i) => i + 1)
+    .map(i => `<div class="cell${i <= entry.value ? ' filled' : ''}" data-cell="${i}"></div>`)
+    .join('');
+  return `
+    <div class="card" data-id="${entry.id}">
+      <div class="card-name-row">
+        <div class="card-name">${escapeHtml(entry.name)}</div>
+        <button class="card-remove" data-remove="${entry.id}" data-kind="${kind}">убрать</button>
+      </div>
+      <div class="card-layer">${escapeHtml(entry.layer || '')}</div>
+      <div class="bar" data-id="${entry.id}" data-kind="${kind}" data-max="${entry.max}">${cells}</div>
+      <div class="bar-footer">
+        <span class="bar-value"><b>${entry.value}</b> / ${entry.max}</span>
+        <span class="bar-label">${labelFor(entry.value)}</span>
+      </div>
+    </div>`;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function render() {
+  document.getElementById('settlementsGrid').innerHTML =
+    state.settlements.map(e => cardHTML(e, 'settlements')).join('') || emptyNote();
+  document.getElementById('factionsGrid').innerHTML =
+    state.factions.map(e => cardHTML(e, 'factions')).join('') || emptyNote();
+}
+
+function emptyNote() {
+  return `<div class="stamp"><div class="stamp-word">Пусто</div><div class="stamp-sub">Пока нет записей</div></div>`;
+}
+
+function findEntry(id, kind) {
+  return state[kind].find(e => e.id === id);
+}
+
+async function persist() {
+  await OBR.room.setMetadata({ [METADATA_KEY]: state });
+}
+
+document.addEventListener('click', async (ev) => {
+  if (!isGM) return;
+
+  const cell = ev.target.closest('.cell');
+  if (cell) {
+    const bar = cell.closest('.bar');
+    const id = bar.dataset.id;
+    const kind = bar.dataset.kind;
+    const value = parseInt(cell.dataset.cell, 10);
+    const entry = findEntry(id, kind);
+    if (entry) {
+      entry.value = (entry.value === value) ? value - 1 : value; // повторный клик по последней ячейке сбрасывает на 1 меньше
+      render();
+      await persist();
+    }
+    return;
+  }
+
+  const removeBtn = ev.target.closest('[data-remove]');
+  if (removeBtn) {
+    const id = removeBtn.dataset.remove;
+    const kind = removeBtn.dataset.kind;
+    state[kind] = state[kind].filter(e => e.id !== id);
+    render();
+    await persist();
+    return;
+  }
+});
+
+document.getElementById('addSettlement').addEventListener('click', async () => {
+  const name = prompt('Название поселения:');
+  if (!name) return;
+  state.settlements.push({ id: cryptoId(), name, layer: '', max: 10, value: 0, known: true });
+  render();
+  await persist();
+});
+
+document.getElementById('addFaction').addEventListener('click', async () => {
+  const name = prompt('Название гильдии:');
+  if (!name) return;
+  state.factions.push({ id: cryptoId(), name, layer: '', max: 10, value: 0, known: true });
+  render();
+  await persist();
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.panel).classList.add('active');
+  });
+});
+
+function setupAshField() {
+  const field = document.getElementById('ashField');
+  for (let i = 0; i < 36; i++) {
+    const m = document.createElement('div');
+    m.className = 'ash-mote';
+    m.style.left = (Math.random() * 100) + 'vw';
+    m.style.animationDuration = (9 + Math.random() * 12) + 's';
+    m.style.animationDelay = (Math.random() * -20) + 's';
+    m.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+    m.style.opacity = 0.15 + Math.random() * 0.35;
+    field.appendChild(m);
+  }
+}
+
+async function init() {
+  setupAshField();
+
+  const role = await OBR.player.getRole();
+  isGM = role === 'GM';
+  document.body.classList.toggle('gm-mode', isGM);
+  const badge = document.getElementById('roleBadge');
+  badge.textContent = isGM ? 'Режим Ведущего · редактирование включено' : 'Режим Игрока · только просмотр';
+  badge.classList.toggle('gm', isGM);
+
+  const metadata = await OBR.room.getMetadata();
+  state = metadata[METADATA_KEY] || defaultState;
+  render();
+
+  if (!metadata[METADATA_KEY] && isGM) {
+    await persist();
+  }
+
+  OBR.room.onMetadataChange((newMetadata) => {
+    const incoming = newMetadata[METADATA_KEY];
+    if (incoming) {
+      state = incoming;
+      render();
+    }
+  });
+}
+
+OBR.onReady(() => {
+  init();
+});
+</script>
+
+</body>
+</html>
