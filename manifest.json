@@ -7,6 +7,6 @@
   "action": {
     "title": "Летопись Репутации",
     "icon": "icon.svg",
-    "popover": "/index.html"
+    "popover": "index.html"
   }
 }
