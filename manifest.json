@@ -7,6 +7,8 @@
   "action": {
     "title": "Летопись Репутации",
     "icon": "https://aowaowaowaow.github.io/obr-reputation-tracker/icon.svg",
-    "popover": "https://aowaowaowaow.github.io/obr-reputation-tracker/index.html"
+    "popover": "https://aowaowaowaow.github.io/obr-reputation-tracker/index.html",
+    "height": 720,
+    "width": 440
   }
 }
