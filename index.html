@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Пепел и Пустота — Летопись Репутации</title>
+<title>Летопись Репутации</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Spectral:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -34,7 +34,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 16px 96px;
+    padding: 36px 16px 92px;
   }
 
   .ash-field {
@@ -66,19 +66,20 @@
     position: relative;
     z-index: 1;
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
+    width: 100%;
   }
   .eyebrow {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    letter-spacing: 0.28em;
+    letter-spacing: 0.26em;
     text-transform: uppercase;
     color: var(--bone-dim);
     margin-bottom: 8px;
   }
   h1 {
     font-family: 'IM Fell English SC', serif;
-    font-size: 28px;
+    font-size: 27px;
     font-weight: 400;
     letter-spacing: 0.03em;
     color: var(--bone);
@@ -95,7 +96,7 @@
     margin-top: 12px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     padding: 4px 10px;
     border: 1px solid var(--panel-edge);
@@ -107,6 +108,39 @@
     border-color: var(--ember-soft);
   }
 
+  .save-toolbar {
+    display: none;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .gm-mode .save-toolbar { display: flex; }
+  .save-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    background: rgba(34, 29, 23, 0.6);
+    border: 1px solid var(--panel-edge);
+    border-radius: 3px;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .save-btn:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
+  .save-note {
+    display: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--bone-dim);
+    opacity: 0.7;
+    margin-top: 6px;
+    text-align: center;
+  }
+  .gm-mode .save-note { display: block; }
+
   main {
     position: relative;
     z-index: 1;
@@ -114,27 +148,27 @@
     max-width: 880px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
   }
 
   .panel {
     display: none;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
   .panel.active { display: flex; }
 
   .settlements-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 14px;
   }
 
   .card {
     background: linear-gradient(180deg, var(--panel) 0%, #1c1712 100%);
     border: 1px solid var(--panel-edge);
     border-radius: 3px;
-    padding: 20px 18px;
+    padding: 18px 16px;
     position: relative;
   }
   .card::before {
@@ -144,63 +178,64 @@
     height: 2px;
     background: linear-gradient(90deg, transparent, var(--ember-soft), transparent);
   }
-  .card.unknown { opacity: 0.7; }
+  .card.unknown { opacity: 0.75; }
 
-  .card-name-row {
+  .card-top-row {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: flex-start;
     gap: 8px;
     margin-bottom: 2px;
   }
   .card-name {
     font-family: 'IM Fell English SC', serif;
-    font-size: 20px;
+    font-size: 19px;
     letter-spacing: 0.02em;
   }
-  .card-remove {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--bone-dim);
-    background: none;
-    border: 1px solid var(--panel-edge);
-    border-radius: 3px;
-    padding: 3px 7px;
-    cursor: pointer;
-    display: none;
-  }
-  .card-remove:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
-  .gm-mode .card-remove { display: inline-block; }
-
   .card-layer {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     color: var(--bone-dim);
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
+
+  .card-remove {
+    display: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--bone-dim);
+    background: none;
+    border: 1px solid var(--panel-edge);
+    border-radius: 3px;
+    padding: 3px 7px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .gm-mode .card-remove { display: inline-block; }
+  .card-remove:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
 
   .bar {
     display: flex;
     gap: 4px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
   .cell {
     flex: 1;
-    height: 24px;
+    height: 22px;
     background: #0f0c09;
     border: 1px solid var(--panel-edge);
     border-radius: 2px;
-    cursor: pointer;
+    cursor: default;
     transition: background 0.25s ease, box-shadow 0.25s ease;
   }
+  .gm-mode .cell { cursor: pointer; }
   .cell.filled {
     background: linear-gradient(180deg, var(--ember-glow), var(--ember));
     box-shadow: 0 0 10px rgba(200, 85, 61, 0.45);
     border-color: var(--ember-glow);
   }
-  body:not(.gm-mode) .cell { cursor: default; }
 
   .bar-footer {
     display: flex;
@@ -209,58 +244,87 @@
   }
   .bar-value {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--bone-dim);
   }
   .bar-value b { color: var(--ember-glow); font-weight: 700; }
   .bar-label {
     font-family: 'Spectral', serif;
-    font-size: 12px;
+    font-size: 11px;
     font-style: italic;
     color: var(--bone-dim);
   }
 
   .unknown-mark {
     font-family: 'IM Fell English SC', serif;
-    font-size: 30px;
+    font-size: 28px;
     text-align: center;
     color: var(--bone-dim);
     letter-spacing: 0.3em;
   }
 
-  .add-card {
-    align-self: center;
-    width: 100%;
+  .reveal-btn {
+    display: none;
+    margin: 12px auto 0;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    background: none;
+    border: 1px dashed var(--panel-edge);
+    border-radius: 3px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .gm-mode .reveal-btn { display: block; }
+  .reveal-btn:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
+
+  .add-row {
+    display: none;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .gm-mode .add-row { display: flex; }
+  .add-card {
+    flex: 1;
+    min-width: 160px;
+    text-align: center;
+    padding: 16px 14px;
+    border: 1px dashed var(--panel-edge);
+    border-radius: 3px;
+    background: rgba(34, 29, 23, 0.4);
+    cursor: pointer;
+  }
+  .add-card:hover { border-color: var(--ember-soft); background: rgba(34, 29, 23, 0.65); }
+  .add-card-label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 15px;
+    color: var(--bone);
+  }
+  .add-card-sub {
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--bone-dim);
-    background: rgba(34,29,23,0.4);
-    border: 1px dashed var(--panel-edge);
-    border-radius: 3px;
-    padding: 14px;
-    cursor: pointer;
-    display: none;
   }
-  .gm-mode .add-card { display: block; }
-  .add-card:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
+  .add-card.unknown-style .add-card-label { letter-spacing: 0.3em; color: var(--bone-dim); }
 
   .stamp {
     align-self: center;
-    margin-top: 8px;
     text-align: center;
-    padding: 32px 40px;
+    padding: 28px 32px;
     border: 1px dashed var(--panel-edge);
     border-radius: 3px;
     background: rgba(34, 29, 23, 0.4);
   }
   .stamp-word {
     font-family: 'IM Fell English SC', serif;
-    font-size: 26px;
+    font-size: 24px;
     letter-spacing: 0.15em;
     color: var(--ember-glow);
-    transform: rotate(-4deg);
     display: inline-block;
     text-transform: uppercase;
   }
@@ -268,7 +332,7 @@
     margin-top: 8px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.14em;
     color: var(--bone-dim);
     text-transform: uppercase;
   }
@@ -295,28 +359,16 @@
   .tab-btn {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--bone-dim);
     background: transparent;
     border: none;
-    padding: 11px 20px;
+    padding: 11px 18px;
     cursor: pointer;
-    transition: color 0.2s ease, background 0.2s ease;
   }
   .tab-btn:hover { color: var(--bone); }
   .tab-btn.active { color: var(--bone); background: var(--ember-soft); }
-
-  .sync-note {
-    position: relative;
-    z-index: 1;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--bone-dim);
-    text-align: center;
-    margin-top: 4px;
-    opacity: 0.7;
-  }
 </style>
 </head>
 <body>
@@ -324,25 +376,48 @@
 <div class="ash-field" id="ashField"></div>
 
 <header>
-  <div class="eyebrow">Пепел и Пустота — учёт отношений</div>
+  <div class="eyebrow">Учёт отношений партии</div>
   <h1>Летопись Репутации</h1>
   <div class="subhead">Каждое поселение помнит по-своему. Заслужи или потеряй.</div>
   <div class="role-badge" id="roleBadge">Проверка роли…</div>
+
+  <div class="save-toolbar">
+    <button class="save-btn" id="exportBtn">Скачать сохранение</button>
+    <button class="save-btn" id="importBtn">Загрузить сохранение</button>
+    <input type="file" id="importInput" accept="application/json" style="display:none;">
+  </div>
+  <div class="save-note">Только ГМ может менять шкалы и состав. Всё синхронизируется у всех за столом автоматически.</div>
 </header>
 
 <main>
   <section class="panel active" id="panel-settlements">
     <div class="settlements-grid" id="settlementsGrid"></div>
-    <button class="add-card" id="addSettlement">+ добавить поселение</button>
+    <div class="add-row">
+      <div class="add-card" id="addKnownBtn">
+        <div class="add-card-label">+ Добавить поселение</div>
+        <div class="add-card-sub">Известное, со шкалой</div>
+      </div>
+      <div class="add-card unknown-style" id="addUnknownBtn">
+        <div class="add-card-label">+ ???</div>
+        <div class="add-card-sub">Скрытое, до открытия</div>
+      </div>
+    </div>
   </section>
 
   <section class="panel" id="panel-factions">
     <div class="settlements-grid" id="factionsGrid"></div>
-    <button class="add-card" id="addFaction">+ добавить гильдию</button>
+    <div class="add-row">
+      <div class="add-card" id="addFactionKnownBtn">
+        <div class="add-card-label">+ Добавить гильдию</div>
+        <div class="add-card-sub">Известная, со шкалой</div>
+      </div>
+      <div class="add-card unknown-style" id="addFactionUnknownBtn">
+        <div class="add-card-label">+ ???</div>
+        <div class="add-card-sub">Скрытая, до открытия</div>
+      </div>
+    </div>
   </section>
 </main>
-
-<div class="sync-note">Синхронизировано со всеми участниками сцены</div>
 
 <nav class="tabs">
   <div class="tabs-inner">
@@ -354,46 +429,47 @@
 <script type="module">
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2";
 
-const METADATA_KEY = "com.ashvoid.reputation-tracker/data";
+const METADATA_KEY = "com.reputation-tracker.owlbear/data";
 const labels = [
   'Враждебность', 'Враждебность', 'Настороженность', 'Настороженность',
   'Настороженность', 'Нейтралитет', 'Нейтралитет', 'Доверие',
   'Доверие', 'Преданность'
 ];
 
+function makeId() { return 'id-' + Math.random().toString(36).slice(2, 10); }
+function labelFor(value) { return value > 0 ? (labels[value - 1] || '') : 'Неизвестность'; }
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
 const defaultState = {
   settlements: [
-    { id: cryptoId(), name: 'Зольная Впадина', layer: 'Слой 0 · Родина партии', max: 10, value: 4, known: true },
-    { id: cryptoId(), name: '???', layer: 'Слой 1 · Неизведано', max: 10, value: 0, known: false }
+    { id: makeId(), name: 'Зольная Впадина', layer: 'Слой 0 · Родина партии', max: 10, value: 4, known: true },
+    { id: makeId(), name: '???', layer: 'Слой 1 · Неизведано', max: 10, value: 0, known: false }
   ],
   factions: []
 };
 
-function cryptoId() {
-  return 'id-' + Math.random().toString(36).slice(2, 10);
-}
-
 let state = null;
 let isGM = false;
-
-function labelFor(value) {
-  return value > 0 ? (labels[value - 1] || '') : 'Неизвестность';
-}
 
 function cardHTML(entry, kind) {
   if (!entry.known) {
     return `
       <div class="card unknown" data-id="${entry.id}">
-        <div class="card-name-row">
+        <div class="card-top-row">
           <div class="card-name">???</div>
           <button class="card-remove" data-remove="${entry.id}" data-kind="${kind}">убрать</button>
         </div>
         <div class="card-layer">${escapeHtml(entry.layer || '')}</div>
         <div class="unknown-mark">— — —</div>
-        <div class="bar-footer" style="margin-top:14px;">
+        <div class="bar-footer" style="margin-top:12px;">
           <span class="bar-value">Данных нет</span>
           <span class="bar-label">Откроется по прибытии</span>
         </div>
+        <button class="reveal-btn" data-reveal="${entry.id}" data-kind="${kind}">Открыть</button>
       </div>`;
   }
   const cells = Array.from({ length: entry.max }, (_, i) => i + 1)
@@ -401,7 +477,7 @@ function cardHTML(entry, kind) {
     .join('');
   return `
     <div class="card" data-id="${entry.id}">
-      <div class="card-name-row">
+      <div class="card-top-row">
         <div class="card-name">${escapeHtml(entry.name)}</div>
         <button class="card-remove" data-remove="${entry.id}" data-kind="${kind}">убрать</button>
       </div>
@@ -414,10 +490,8 @@ function cardHTML(entry, kind) {
     </div>`;
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
+function emptyNote() {
+  return `<div class="stamp"><div class="stamp-word">Пусто</div><div class="stamp-sub">Пока нет записей</div></div>`;
 }
 
 function render() {
@@ -427,13 +501,7 @@ function render() {
     state.factions.map(e => cardHTML(e, 'factions')).join('') || emptyNote();
 }
 
-function emptyNote() {
-  return `<div class="stamp"><div class="stamp-word">Пусто</div><div class="stamp-sub">Пока нет записей</div></div>`;
-}
-
-function findEntry(id, kind) {
-  return state[kind].find(e => e.id === id);
-}
+function findEntry(id, kind) { return state[kind].find(e => e.id === id); }
 
 async function persist() {
   await OBR.room.setMetadata({ [METADATA_KEY]: state });
@@ -445,12 +513,11 @@ document.addEventListener('click', async (ev) => {
   const cell = ev.target.closest('.cell');
   if (cell) {
     const bar = cell.closest('.bar');
-    const id = bar.dataset.id;
-    const kind = bar.dataset.kind;
+    const id = bar.dataset.id, kind = bar.dataset.kind;
     const value = parseInt(cell.dataset.cell, 10);
     const entry = findEntry(id, kind);
     if (entry) {
-      entry.value = (entry.value === value) ? value - 1 : value; // повторный клик по последней ячейке сбрасывает на 1 меньше
+      entry.value = (entry.value === value) ? value - 1 : value;
       render();
       await persist();
     }
@@ -459,29 +526,116 @@ document.addEventListener('click', async (ev) => {
 
   const removeBtn = ev.target.closest('[data-remove]');
   if (removeBtn) {
-    const id = removeBtn.dataset.remove;
-    const kind = removeBtn.dataset.kind;
-    state[kind] = state[kind].filter(e => e.id !== id);
+    const id = removeBtn.dataset.remove, kind = removeBtn.dataset.kind;
+    const entry = findEntry(id, kind);
+    const name = entry && entry.known ? entry.name : 'эту запись (???)';
+    if (confirm(`Удалить «${name}»?`)) {
+      state[kind] = state[kind].filter(e => e.id !== id);
+      render();
+      await persist();
+    }
+    return;
+  }
+
+  const revealBtn = ev.target.closest('[data-reveal]');
+  if (revealBtn) {
+    const id = revealBtn.dataset.reveal, kind = revealBtn.dataset.kind;
+    const entry = findEntry(id, kind);
+    if (!entry) return;
+    const name = prompt('Название:');
+    if (!name) return;
+    const layer = prompt('Слой / подпись (необязательно):', entry.layer || '');
+    entry.known = true;
+    entry.name = name;
+    entry.layer = layer || '';
+    entry.value = entry.value || 0;
+    entry.max = entry.max || 10;
     render();
     await persist();
     return;
   }
 });
 
-document.getElementById('addSettlement').addEventListener('click', async () => {
+document.getElementById('addKnownBtn').addEventListener('click', async () => {
   const name = prompt('Название поселения:');
   if (!name) return;
-  state.settlements.push({ id: cryptoId(), name, layer: '', max: 10, value: 0, known: true });
+  const layer = prompt('Слой / подпись:', '') || '';
+  state.settlements.push({ id: makeId(), name, layer, max: 10, value: 0, known: true });
   render();
   await persist();
 });
 
-document.getElementById('addFaction').addEventListener('click', async () => {
-  const name = prompt('Название гильдии:');
-  if (!name) return;
-  state.factions.push({ id: cryptoId(), name, layer: '', max: 10, value: 0, known: true });
+document.getElementById('addUnknownBtn').addEventListener('click', async () => {
+  const layer = prompt('Слой / подпись для скрытого поселения (необязательно):', '') || '';
+  state.settlements.push({ id: makeId(), name: '???', layer, max: 10, value: 0, known: false });
   render();
   await persist();
+});
+
+document.getElementById('addFactionKnownBtn').addEventListener('click', async () => {
+  const name = prompt('Название гильдии:');
+  if (!name) return;
+  const layer = prompt('Подпись (необязательно):', '') || '';
+  state.factions.push({ id: makeId(), name, layer, max: 10, value: 0, known: true });
+  render();
+  await persist();
+});
+
+document.getElementById('addFactionUnknownBtn').addEventListener('click', async () => {
+  const layer = prompt('Подпись для скрытой гильдии (необязательно):', '') || '';
+  state.factions.push({ id: makeId(), name: '???', layer, max: 10, value: 0, known: false });
+  render();
+  await persist();
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `letopis-reputacii-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importInput').click();
+});
+
+document.getElementById('importInput').addEventListener('change', (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!parsed || !Array.isArray(parsed.settlements)) throw new Error('bad format');
+      state = {
+        settlements: parsed.settlements.map(e => ({
+          id: e.id || makeId(), name: e.name || '???', layer: e.layer || '',
+          max: typeof e.max === 'number' ? e.max : 10,
+          value: typeof e.value === 'number' ? e.value : 0,
+          known: !!e.known
+        })),
+        factions: Array.isArray(parsed.factions) ? parsed.factions.map(e => ({
+          id: e.id || makeId(), name: e.name || '???', layer: e.layer || '',
+          max: typeof e.max === 'number' ? e.max : 10,
+          value: typeof e.value === 'number' ? e.value : 0,
+          known: !!e.known
+        })) : []
+      };
+      render();
+      await persist();
+    } catch (err) {
+      alert('Не удалось загрузить файл: это не сохранение Летописи Репутации.');
+    }
+    ev.target.value = '';
+  };
+  reader.readAsText(file);
 });
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -532,11 +686,19 @@ async function init() {
       render();
     }
   });
+
+  OBR.player.onChange((player) => {
+    const nowGM = player.role === 'GM';
+    if (nowGM !== isGM) {
+      isGM = nowGM;
+      document.body.classList.toggle('gm-mode', isGM);
+      badge.textContent = isGM ? 'Режим Ведущего · редактирование включено' : 'Режим Игрока · только просмотр';
+      badge.classList.toggle('gm', isGM);
+    }
+  });
 }
 
-OBR.onReady(() => {
-  init();
-});
+OBR.onReady(() => { init(); });
 </script>
 
 </body>

@@ -1,16 +1,18 @@
 {
-  "id": "com.ashvoid.reputation-tracker",
-  "name": "Пепел и Пустота — Летопись Репутации",
+  "id": "com.reputation-tracker.owlbear",
+  "name": "Летопись Репутации",
   "version": "1.0.0",
   "manifest_version": 1,
-  "author": "Ash & Void GM",
+  "author": "GM",
   "description": "Учёт репутации партии у поселений и гильдий, синхронизированный между всеми игроками за столом.",
   "action": {
     "title": "Летопись Репутации",
     "description": "Открыть трекер репутации",
     "icon": "icon.svg",
-    "url": "/index.html",
-    "height": 720,
-    "width": 440
+    "popover": {
+      "url": "/index.html",
+      "height": 720,
+      "width": 440
+    }
   }
 }
