@@ -9,10 +9,6 @@
     "title": "Летопись Репутации",
     "description": "Открыть трекер репутации",
     "icon": "icon.svg",
-    "popover": {
-      "url": "/index.html",
-      "height": 720,
-      "width": 440
-    }
+    "popover": "/index.html"
   }
 }
