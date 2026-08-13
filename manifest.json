@@ -6,7 +6,7 @@
   "description": "Учёт репутации партии у поселений и гильдий, синхронизированный между всеми игроками за столом.",
   "action": {
     "title": "Летопись Репутации",
-    "icon": "icon.svg",
-    "popover": "index.html"
+    "icon": "https://aowaowaowaow.github.io/obr-reputation-tracker/icon.svg",
+    "popover": "https://aowaowaowaow.github.io/obr-reputation-tracker/index.html"
   }
 }
