@@ -198,10 +198,11 @@
     color: var(--bone-dim);
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
 
-  .card-remove {
+  .card-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .card-remove, .card-edit-scale {
     display: none;
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
@@ -211,10 +212,23 @@
     border-radius: 3px;
     padding: 3px 7px;
     cursor: pointer;
-    flex-shrink: 0;
   }
-  .gm-mode .card-remove { display: inline-block; }
-  .card-remove:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
+  .gm-mode .card-remove, .gm-mode .card-edit-scale { display: inline-block; }
+  .card-remove:hover, .card-edit-scale:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
+
+  .scale-desc {
+    display: none;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--bone-dim);
+    font-style: italic;
+    background: rgba(15, 12, 9, 0.5);
+    border-left: 2px solid var(--ember-soft);
+    padding: 7px 10px;
+    margin-bottom: 12px;
+    border-radius: 0 2px 2px 0;
+  }
+  .gm-mode .scale-desc { display: block; }
 
   .bar {
     display: flex;
@@ -369,6 +383,51 @@
   }
   .tab-btn:hover { color: var(--bone); }
   .tab-btn.active { color: var(--bone); background: var(--ember-soft); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 8, 6, 0.8);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 4px;
+    padding: 18px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .modal-title { font-family: 'IM Fell English SC', serif; font-size: 17px; }
+  .modal-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--bone-dim);
+    line-height: 1.5;
+  }
+  .modal-textarea {
+    flex: 1;
+    min-height: 260px;
+    background: #0f0c09;
+    border: 1px solid var(--panel-edge);
+    border-radius: 3px;
+    color: var(--bone);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    padding: 10px;
+    resize: vertical;
+  }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
 </style>
 </head>
 <body>
@@ -426,18 +485,39 @@
   </div>
 </nav>
 
+<div class="modal-overlay" id="scaleModal">
+  <div class="modal-box">
+    <div class="modal-title" id="scaleModalTitle">Шкала репутации</div>
+    <div class="modal-hint">По одной строке на деление, формат «номер: описание» (0–10). Держи номера в начале строки — иначе она потеряется.</div>
+    <textarea class="modal-textarea" id="scaleTextarea"></textarea>
+    <div class="modal-actions">
+      <button class="save-btn" id="scaleCancelBtn">Отмена</button>
+      <button class="save-btn" id="scaleSaveBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2";
 
 const METADATA_KEY = "com.reputation-tracker.owlbear/data";
-const labels = [
-  'Враждебность', 'Враждебность', 'Настороженность', 'Настороженность',
-  'Настороженность', 'Нейтралитет', 'Нейтралитет', 'Доверие',
-  'Доверие', 'Преданность'
+
+const DEFAULT_SCALE = [
+  'Неизвестность. Партию воспринимают просто как «снизошедших» — стандартная настороженность к чужакам с Дна, ничего личного. Цены на рынке чуть выше средних (наценка «за приезжих»), доступ только к открытым легальным зонам.',
+  'Враждебность (низкая). Кто-то заметил и запомнил партию в негативном свете — мелкая стычка, неудачная сделка, конфликт с NPC. Торговцы неохотно продают отдельные товары, стража присматривает чуть внимательнее обычного, за спиной слышны недобрые шепотки.',
+  'Враждебность (высокая). Открытая неприязнь. Наценка на рынке ощутимо выше (+25–30%), возможна попытка спровоцировать конфликт со стороны местных, стража может остановить и спросить документы/цель визита без повода.',
+  'Настороженность (низкая). Прямой враждебности нет, но и доверия ноль. Цены возвращаются к обычным, но никаких услуг сверх формальных — с партией будут разговаривать по делу и не больше.',
+  'Настороженность (средняя). Отдельные NPC готовы разговориться при личном контакте (не толпа, а конкретный человек, к которому нашли подход). Доступ по-прежнему только к легальным зонам.',
+  'Настороженность (высокая) / порог нейтралитета. Открывается первая «услуга за услугу» — кто-то готов поделиться зацепкой или мелкой помощью в обмен на встречную любезность. Общий тон города — терпимость без тепла.',
+  'Нейтралитет (низкая). Партию воспринимают как обычных жителей/гостей, не выделяя особо. Полный доступ к легальным местам (рынок, таверны, храм, работа на ash-бригадах) без вопросов.',
+  'Нейтралитет (высокая). NPC сами предлагают слухи и мелкие советы без просьбы. Скидки на рынке (~10%). Кто-то может упомянуть о доске заказов Наёмников, если партия ещё не в курсе.',
+  'Доверие (низкая). Полулегальные зоны становятся доступнее — двор трудовой повинности, возможность неформально пройти в приёмную стражи без лишних вопросов. Один из стражников/чиновников может «не заметить» мелкое нарушение.',
+  'Доверие (высокая). Существенные скидки (~20%), кто-то из уважаемых горожан готов лично поручиться за партию перед стражей. Повстанцы или представители Государства (в зависимости от того, с кем партия сблизилась) выходят на тихий контакт с предложением.',
+  'Преданность. Партия — локальные герои. Товары почти даром, стража закрывает глаза на мелкие нарушения закона, а если партии будет угрожать опасность в черте города — местные вступятся сами, без просьбы. Разумно дать здесь уникальную награду — постоянного союзника-NPC или официальное предложение от одной из фракций.'
 ];
 
 function makeId() { return 'id-' + Math.random().toString(36).slice(2, 10); }
-function labelFor(value) { return value > 0 ? (labels[value - 1] || '') : 'Неизвестность'; }
+function scaleFor(entry) { return (Array.isArray(entry.scale) && entry.scale.length === 11) ? entry.scale : DEFAULT_SCALE; }
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -446,7 +526,7 @@ function escapeHtml(str) {
 
 const defaultState = {
   settlements: [
-    { id: makeId(), name: 'Зольная Впадина', layer: 'Слой 0 · Родина партии', max: 10, value: 4, known: true },
+    { id: makeId(), name: 'Зольная Впадина', layer: 'Слой 0 · Родина партии', max: 10, value: 4, known: true, scale: null },
     { id: makeId(), name: '???', layer: 'Слой 1 · Неизведано', max: 10, value: 0, known: false }
   ],
   factions: []
@@ -461,7 +541,9 @@ function cardHTML(entry, kind) {
       <div class="card unknown" data-id="${entry.id}">
         <div class="card-top-row">
           <div class="card-name">???</div>
-          <button class="card-remove" data-remove="${entry.id}" data-kind="${kind}">убрать</button>
+          <div class="card-btns">
+            <button class="card-remove" data-remove="${entry.id}" data-kind="${kind}">убрать</button>
+          </div>
         </div>
         <div class="card-layer">${escapeHtml(entry.layer || '')}</div>
         <div class="unknown-mark">— — —</div>
@@ -472,6 +554,8 @@ function cardHTML(entry, kind) {
         <button class="reveal-btn" data-reveal="${entry.id}" data-kind="${kind}">Открыть</button>
       </div>`;
   }
+  const scale = scaleFor(entry);
+  const desc = scale[entry.value] || '';
   const cells = Array.from({ length: entry.max }, (_, i) => i + 1)
     .map(i => `<div class="cell${i <= entry.value ? ' filled' : ''}" data-cell="${i}"></div>`)
     .join('');
@@ -479,13 +563,17 @@ function cardHTML(entry, kind) {
     <div class="card" data-id="${entry.id}">
       <div class="card-top-row">
         <div class="card-name">${escapeHtml(entry.name)}</div>
-        <button class="card-remove" data-remove="${entry.id}" data-kind="${kind}">убрать</button>
+        <div class="card-btns">
+          <button class="card-edit-scale" data-edit-scale="${entry.id}" data-kind="${kind}">шкала</button>
+          <button class="card-remove" data-remove="${entry.id}" data-kind="${kind}">убрать</button>
+        </div>
       </div>
       <div class="card-layer">${escapeHtml(entry.layer || '')}</div>
+      <div class="scale-desc">${escapeHtml(desc)}</div>
       <div class="bar" data-id="${entry.id}" data-kind="${kind}" data-max="${entry.max}">${cells}</div>
       <div class="bar-footer">
         <span class="bar-value"><b>${entry.value}</b> / ${entry.max}</span>
-        <span class="bar-label">${labelFor(entry.value)}</span>
+        <span class="bar-label">Деление ${entry.value}</span>
       </div>
     </div>`;
 }
@@ -554,13 +642,19 @@ document.addEventListener('click', async (ev) => {
     await persist();
     return;
   }
+
+  const editScaleBtn = ev.target.closest('[data-edit-scale]');
+  if (editScaleBtn) {
+    openScaleModal(editScaleBtn.dataset.editScale, editScaleBtn.dataset.kind);
+    return;
+  }
 });
 
 document.getElementById('addKnownBtn').addEventListener('click', async () => {
   const name = prompt('Название поселения:');
   if (!name) return;
   const layer = prompt('Слой / подпись:', '') || '';
-  state.settlements.push({ id: makeId(), name, layer, max: 10, value: 0, known: true });
+  state.settlements.push({ id: makeId(), name, layer, max: 10, value: 0, known: true, scale: null });
   render();
   await persist();
 });
@@ -576,7 +670,7 @@ document.getElementById('addFactionKnownBtn').addEventListener('click', async ()
   const name = prompt('Название гильдии:');
   if (!name) return;
   const layer = prompt('Подпись (необязательно):', '') || '';
-  state.factions.push({ id: makeId(), name, layer, max: 10, value: 0, known: true });
+  state.factions.push({ id: makeId(), name, layer, max: 10, value: 0, known: true, scale: null });
   render();
   await persist();
 });
@@ -614,19 +708,16 @@ document.getElementById('importInput').addEventListener('change', (ev) => {
     try {
       const parsed = JSON.parse(reader.result);
       if (!parsed || !Array.isArray(parsed.settlements)) throw new Error('bad format');
+      const normalize = (e) => ({
+        id: e.id || makeId(), name: e.name || '???', layer: e.layer || '',
+        max: typeof e.max === 'number' ? e.max : 10,
+        value: typeof e.value === 'number' ? e.value : 0,
+        known: !!e.known,
+        scale: (Array.isArray(e.scale) && e.scale.length === 11) ? e.scale : null
+      });
       state = {
-        settlements: parsed.settlements.map(e => ({
-          id: e.id || makeId(), name: e.name || '???', layer: e.layer || '',
-          max: typeof e.max === 'number' ? e.max : 10,
-          value: typeof e.value === 'number' ? e.value : 0,
-          known: !!e.known
-        })),
-        factions: Array.isArray(parsed.factions) ? parsed.factions.map(e => ({
-          id: e.id || makeId(), name: e.name || '???', layer: e.layer || '',
-          max: typeof e.max === 'number' ? e.max : 10,
-          value: typeof e.value === 'number' ? e.value : 0,
-          known: !!e.known
-        })) : []
+        settlements: parsed.settlements.map(normalize),
+        factions: Array.isArray(parsed.factions) ? parsed.factions.map(normalize) : []
       };
       render();
       await persist();
@@ -645,6 +736,49 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById(btn.dataset.panel).classList.add('active');
   });
+});
+
+// ===== модалка редактирования шкалы =====
+let editingScale = null; // { id, kind }
+
+function openScaleModal(id, kind) {
+  const entry = findEntry(id, kind);
+  if (!entry) return;
+  editingScale = { id, kind };
+  const scale = scaleFor(entry);
+  document.getElementById('scaleModalTitle').textContent = `Шкала: ${entry.name}`;
+  document.getElementById('scaleTextarea').value = scale.map((line, i) => `${i}: ${line}`).join('\n');
+  document.getElementById('scaleModal').classList.add('active');
+}
+
+function closeScaleModal() {
+  document.getElementById('scaleModal').classList.remove('active');
+  editingScale = null;
+}
+
+document.getElementById('scaleCancelBtn').addEventListener('click', closeScaleModal);
+document.getElementById('scaleModal').addEventListener('click', (ev) => {
+  if (ev.target.id === 'scaleModal') closeScaleModal();
+});
+
+document.getElementById('scaleSaveBtn').addEventListener('click', async () => {
+  if (!editingScale) return;
+  const entry = findEntry(editingScale.id, editingScale.kind);
+  if (!entry) return;
+  const raw = document.getElementById('scaleTextarea').value;
+  const lines = raw.split('\n');
+  const newScale = scaleFor(entry).slice();
+  lines.forEach(line => {
+    const m = line.match(/^\s*(\d+)\s*:\s*(.*)$/);
+    if (m) {
+      const idx = parseInt(m[1], 10);
+      if (idx >= 0 && idx <= 10) newScale[idx] = m[2].trim();
+    }
+  });
+  entry.scale = newScale;
+  render();
+  closeScaleModal();
+  await persist();
 });
 
 function setupAshField() {
