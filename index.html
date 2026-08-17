@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Летопись Репутации</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Spectral:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #16130f;
+    --panel: #221d17;
+    --panel-edge: #332b21;
+    --bone: #d9d2c2;
+    --bone-dim: #8c8578;
+    --ember: #8a2e22;
+    --ember-glow: #c8553d;
+    --ember-soft: #4a251d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--void);
+    color: var(--bone);
+    font-family: 'Spectral', serif;
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 16px 92px;
+  }
+
+  .ash-field {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .ash-mote {
+    position: absolute;
+    top: -5%;
+    width: 3px;
+    height: 3px;
+    background: var(--bone-dim);
+    border-radius: 50%;
+    opacity: 0.35;
+    animation: fall linear infinite;
+  }
+  @keyframes fall {
+    from { transform: translateY(0) translateX(0); }
+    to   { transform: translateY(110vh) translateX(var(--drift, 20px)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ash-mote { animation: none; display: none; }
+  }
+
+  header {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    margin-bottom: 24px;
+    width: 100%;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 27px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    color: var(--bone);
+    text-shadow: 0 0 24px rgba(200, 85, 61, 0.15);
+  }
+  .subhead {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--bone-dim);
+    font-style: italic;
+  }
+  .role-badge {
+    display: inline-block;
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--panel-edge);
+    border-radius: 20px;
+    color: var(--bone-dim);
+  }
+  .role-badge.gm {
+    color: var(--ember-glow);
+    border-color: var(--ember-soft);
+  }
+
+  .save-toolbar {
+    display: none;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .gm-mode .save-toolbar { display: flex; }
+  .save-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    background: rgba(34, 29, 23, 0.6);
+    border: 1px solid var(--panel-edge);
+    border-radius: 3px;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .save-btn:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
+  .save-note {
+    display: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--bone-dim);
+    opacity: 0.7;
+    margin-top: 6px;
+    text-align: center;
+  }
+  .gm-mode .save-note { display: block; }
+
+  main {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 880px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .panel {
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .panel.active { display: flex; }
+
+  .settlements-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .card {
+    background: linear-gradient(180deg, var(--panel) 0%, #1c1712 100%);
+    border: 1px solid var(--panel-edge);
+    border-radius: 3px;
+    padding: 18px 16px;
+    position: relative;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--ember-soft), transparent);
+  }
+  .card.unknown { opacity: 0.75; }
+
+  .card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 2px;
+  }
+  .card-name {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 19px;
+    letter-spacing: 0.02em;
+  }
+  .card-layer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--bone-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .card-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .card-remove, .card-edit-scale {
+    display: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--bone-dim);
+    background: none;
+    border: 1px solid var(--panel-edge);
+    border-radius: 3px;
+    padding: 3px 7px;
+    cursor: pointer;
+  }
+  .gm-mode .card-remove, .gm-mode .card-edit-scale { display: inline-block; }
+  .card-remove:hover, .card-edit-scale:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
+
+  .scale-desc {
+    display: none;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--bone-dim);
+    font-style: italic;
+    background: rgba(15, 12, 9, 0.5);
+    border-left: 2px solid var(--ember-soft);
+    padding: 7px 10px;
+    margin-bottom: 12px;
+    border-radius: 0 2px 2px 0;
+  }
+  .gm-mode .scale-desc { display: block; }
+
+  .bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .cell {
+    flex: 1;
+    height: 22px;
+    background: #0f0c09;
+    border: 1px solid var(--panel-edge);
+    border-radius: 2px;
+    cursor: default;
+    transition: background 0.25s ease, box-shadow 0.25s ease;
+  }
+  .gm-mode .cell { cursor: pointer; }
+  .cell.filled {
+    background: linear-gradient(180deg, var(--ember-glow), var(--ember));
+    box-shadow: 0 0 10px rgba(200, 85, 61, 0.45);
+    border-color: var(--ember-glow);
+  }
+
+  .bar-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .bar-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--bone-dim);
+  }
+  .bar-value b { color: var(--ember-glow); font-weight: 700; }
+  .bar-label {
+    font-family: 'Spectral', serif;
+    font-size: 11px;
+    font-style: italic;
+    color: var(--bone-dim);
+  }
+
+  .unknown-mark {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 28px;
+    text-align: center;
+    color: var(--bone-dim);
+    letter-spacing: 0.3em;
+  }
+
+  .reveal-btn {
+    display: none;
+    margin: 12px auto 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    background: none;
+    border: 1px dashed var(--panel-edge);
+    border-radius: 3px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .gm-mode .reveal-btn { display: block; }
+  .reveal-btn:hover { color: var(--ember-glow); border-color: var(--ember-soft); }
+
+  .add-row {
+    display: none;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .gm-mode .add-row { display: flex; }
+  .add-card {
+    flex: 1;
+    min-width: 160px;
+    text-align: center;
+    padding: 16px 14px;
+    border: 1px dashed var(--panel-edge);
+    border-radius: 3px;
+    background: rgba(34, 29, 23, 0.4);
+    cursor: pointer;
+  }
+  .add-card:hover { border-color: var(--ember-soft); background: rgba(34, 29, 23, 0.65); }
+  .add-card-label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 15px;
+    color: var(--bone);
+  }
+  .add-card-sub {
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+  }
+  .add-card.unknown-style .add-card-label { letter-spacing: 0.3em; color: var(--bone-dim); }
+
+  .stamp {
+    align-self: center;
+    text-align: center;
+    padding: 28px 32px;
+    border: 1px dashed var(--panel-edge);
+    border-radius: 3px;
+    background: rgba(34, 29, 23, 0.4);
+  }
+  .stamp-word {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 24px;
+    letter-spacing: 0.15em;
+    color: var(--ember-glow);
+    display: inline-block;
+    text-transform: uppercase;
+  }
+  .stamp-sub {
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--bone-dim);
+    text-transform: uppercase;
+  }
+
+  nav.tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    background: linear-gradient(0deg, var(--void) 60%, transparent);
+    padding: 18px 16px 16px;
+  }
+  .tabs-inner {
+    display: flex;
+    gap: 2px;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .tab-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    background: transparent;
+    border: none;
+    padding: 11px 18px;
+    cursor: pointer;
+  }
+  .tab-btn:hover { color: var(--bone); }
+  .tab-btn.active { color: var(--bone); background: var(--ember-soft); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 8, 6, 0.8);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 4px;
+    padding: 18px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .modal-title { font-family: 'IM Fell English SC', serif; font-size: 17px; }
+  .modal-hint {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--bone-dim);
+    line-height: 1.5;
+  }
+  .modal-textarea {
+    flex: 1;
+    min-height: 260px;
+    background: #0f0c09;
+    border: 1px solid var(--panel-edge);
+    border-radius: 3px;
+    color: var(--bone);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    padding: 10px;
+    resize: vertical;
+  }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+</style>
+</head>
+<body>
+
+<div class="ash-field" id="ashField"></div>
+
+<header>
+  <div class="eyebrow">Учёт отношений партии</div>
+  <h1>Летопись Репутации</h1>
+  <div class="subhead">Каждое поселение помнит по-своему. Заслужи или потеряй.</div>
+  <div class="role-badge" id="roleBadge">Проверка роли…</div>
+
+  <div class="save-toolbar">
+    <button class="save-btn" id="exportBtn">Скачать сохранение</button>
+    <button class="save-btn" id="importBtn">Загрузить сохранение</button>
+    <input type="file" id="importInput" accept="application/json" style="display:none;">
+  </div>
+  <div class="save-note">Только ГМ может менять шкалы и состав. Всё синхронизируется у всех за столом автоматически.</div>
+</header>
+
+<main>
+  <section class="panel active" id="panel-settlements">
+    <div class="settlements-grid" id="settlementsGrid"></div>
+    <div class="add-row">
+      <div class="add-card" id="addKnownBtn">
+        <div class="add-card-label">+ Добавить поселение</div>
+        <div class="add-card-sub">Известное, со шкалой</div>
+      </div>
+      <div class="add-card unknown-style" id="addUnknownBtn">
+        <div class="add-card-label">+ ???</div>
+        <div class="add-card-sub">Скрытое, до открытия</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-factions">
+    <div class="settlements-grid" id="factionsGrid"></div>
+    <div class="add-row">
+      <div class="add-card" id="addFactionKnownBtn">
+        <div class="add-card-label">+ Добавить гильдию</div>
+        <div class="add-card-sub">Известная, со шкалой</div>
+      </div>
+      <div class="add-card unknown-style" id="addFactionUnknownBtn">
+        <div class="add-card-label">+ ???</div>
+        <div class="add-card-sub">Скрытая, до открытия</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <div class="tabs-inner">
+    <button class="tab-btn active" data-panel="panel-settlements">Поселения</button>
+    <button class="tab-btn" data-panel="panel-factions">Гильдии</button>
+  </div>
+</nav>
+
+<div class="modal-overlay" id="scaleModal">
+  <div class="modal-box">
+    <div class="modal-title" id="scaleModalTitle">Шкала репутации</div>
+    <div class="modal-hint">По одной строке на деление, формат «номер: описание» (0–10). Держи номера в начале строки — иначе она потеряется.</div>
+    <textarea class="modal-textarea" id="scaleTextarea"></textarea>
+    <div class="modal-actions">
+      <button class="save-btn" id="scaleCancelBtn">Отмена</button>
+      <button class="save-btn" id="scaleSaveBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import OBR from "https://esm.sh/@owlbear-rodeo/sdk@2";
+
+const METADATA_KEY = "com.reputation-tracker.owlbear/data";
+
+const DEFAULT_SCALE = [
+  'Неизвестность. Партию воспринимают просто как «снизошедших» — стандартная настороженность к чужакам с Дна, ничего личного. Цены на рынке чуть выше средних (наценка «за приезжих»), доступ только к открытым легальным зонам.',
+  'Враждебность (низкая). Кто-то заметил и запомнил партию в негативном свете — мелкая стычка, неудачная сделка, конфликт с NPC. Торговцы неохотно продают отдельные товары, стража присматривает чуть внимательнее обычного, за спиной слышны недобрые шепотки.',
+  'Враждебность (высокая). Открытая неприязнь. Наценка на рынке ощутимо выше (+25–30%), возможна попытка спровоцировать конфликт со стороны местных, стража может остановить и спросить документы/цель визита без повода.',
+  'Настороженность (низкая). Прямой враждебности нет, но и доверия ноль. Цены возвращаются к обычным, но никаких услуг сверх формальных — с партией будут разговаривать по делу и не больше.',
+  'Настороженность (средняя). Отдельные NPC готовы разговориться при личном контакте (не толпа, а конкретный человек, к которому нашли подход). Доступ по-прежнему только к легальным зонам.',
+  'Настороженность (высокая) / порог нейтралитета. Открывается первая «услуга за услугу» — кто-то готов поделиться зацепкой или мелкой помощью в обмен на встречную любезность. Общий тон города — терпимость без тепла.',
+  'Нейтралитет (низкая). Партию воспринимают как обычных жителей/гостей, не выделяя особо. Полный доступ к легальным местам (рынок, таверны, храм, работа на ash-бригадах) без вопросов.',
+  'Нейтралитет (высокая). NPC сами предлагают слухи и мелкие советы без просьбы. Скидки на рынке (~10%). Кто-то может упомянуть о доске заказов Наёмников, если партия ещё не в курсе.',
+  'Доверие (низкая). Полулегальные зоны становятся доступнее — двор трудовой повинности, возможность неформально пройти в приёмную стражи без лишних вопросов. Один из стражников/чиновников может «не заметить» мелкое нарушение.',
+  'Доверие (высокая). Существенные скидки (~20%), кто-то из уважаемых горожан готов лично поручиться за партию перед стражей. Повстанцы или представители Государства (в зависимости от того, с кем партия сблизилась) выходят на тихий контакт с предложением.',
+  'Преданность. Партия — локальные герои. Товары почти даром, стража закрывает глаза на мелкие нарушения закона, а если партии будет угрожать опасность в черте города — местные вступятся сами, без просьбы. Разумно дать здесь уникальную награду — постоянного союзника-NPC или официальное предложение от одной из фракций.'
+];
+
+function makeId() { return 'id-' + Math.random().toString(36).slice(2, 10); }
+function scaleFor(entry) { return (Array.isArray(entry.scale) && entry.scale.length === 11) ? entry.scale : DEFAULT_SCALE; }
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+const defaultState = {
+  settlements: [
+    { id: makeId(), name: 'Зольная Впадина', layer: 'Слой 0 · Родина партии', max: 10, value: 4, known: true, scale: null },
+    { id: makeId(), name: '???', layer: 'Слой 1 · Неизведано', max: 10, value: 0, known: false }
+  ],
+  factions: []
+};
+
+let state = null;
+let isGM = false;
+
+function cardHTML(entry, kind) {
+  if (!entry.known) {
+    return `
+      <div class="card unknown" data-id="${entry.id}">
+        <div class="card-top-row">
+          <div class="card-name">???</div>
+          <div class="card-btns">
+            <button class="card-remove" data-remove="${entry.id}" data-kind="${kind}">убрать</button>
+          </div>
+        </div>
+        <div class="card-layer">${escapeHtml(entry.layer || '')}</div>
+        <div class="unknown-mark">— — —</div>
+        <div class="bar-footer" style="margin-top:12px;">
+          <span class="bar-value">Данных нет</span>
+          <span class="bar-label">Откроется по прибытии</span>
+        </div>
+        <button class="reveal-btn" data-reveal="${entry.id}" data-kind="${kind}">Открыть</button>
+      </div>`;
+  }
+  const scale = scaleFor(entry);
+  const desc = scale[entry.value] || '';
+  const cells = Array.from({ length: entry.max }, (_, i) => i + 1)
+    .map(i => `<div class="cell${i <= entry.value ? ' filled' : ''}" data-cell="${i}"></div>`)
+    .join('');
+  return `
+    <div class="card" data-id="${entry.id}">
+      <div class="card-top-row">
+        <div class="card-name">${escapeHtml(entry.name)}</div>
+        <div class="card-btns">
+          <button class="card-edit-scale" data-edit-scale="${entry.id}" data-kind="${kind}">шкала</button>
+          <button class="card-remove" data-remove="${entry.id}" data-kind="${kind}">убрать</button>
+        </div>
+      </div>
+      <div class="card-layer">${escapeHtml(entry.layer || '')}</div>
+      <div class="scale-desc">${escapeHtml(desc)}</div>
+      <div class="bar" data-id="${entry.id}" data-kind="${kind}" data-max="${entry.max}">${cells}</div>
+      <div class="bar-footer">
+        <span class="bar-value"><b>${entry.value}</b> / ${entry.max}</span>
+        <span class="bar-label">Деление ${entry.value}</span>
+      </div>
+    </div>`;
+}
+
+function emptyNote() {
+  return `<div class="stamp"><div class="stamp-word">Пусто</div><div class="stamp-sub">Пока нет записей</div></div>`;
+}
+
+function render() {
+  document.getElementById('settlementsGrid').innerHTML =
+    state.settlements.map(e => cardHTML(e, 'settlements')).join('') || emptyNote();
+  document.getElementById('factionsGrid').innerHTML =
+    state.factions.map(e => cardHTML(e, 'factions')).join('') || emptyNote();
+}
+
+function findEntry(id, kind) { return state[kind].find(e => e.id === id); }
+
+async function persist() {
+  await OBR.room.setMetadata({ [METADATA_KEY]: state });
+}
+
+document.addEventListener('click', async (ev) => {
+  if (!isGM) return;
+
+  const cell = ev.target.closest('.cell');
+  if (cell) {
+    const bar = cell.closest('.bar');
+    const id = bar.dataset.id, kind = bar.dataset.kind;
+    const value = parseInt(cell.dataset.cell, 10);
+    const entry = findEntry(id, kind);
+    if (entry) {
+      entry.value = (entry.value === value) ? value - 1 : value;
+      render();
+      await persist();
+    }
+    return;
+  }
+
+  const removeBtn = ev.target.closest('[data-remove]');
+  if (removeBtn) {
+    const id = removeBtn.dataset.remove, kind = removeBtn.dataset.kind;
+    const entry = findEntry(id, kind);
+    const name = entry && entry.known ? entry.name : 'эту запись (???)';
+    if (confirm(`Удалить «${name}»?`)) {
+      state[kind] = state[kind].filter(e => e.id !== id);
+      render();
+      await persist();
+    }
+    return;
+  }
+
+  const revealBtn = ev.target.closest('[data-reveal]');
+  if (revealBtn) {
+    const id = revealBtn.dataset.reveal, kind = revealBtn.dataset.kind;
+    const entry = findEntry(id, kind);
+    if (!entry) return;
+    const name = prompt('Название:');
+    if (!name) return;
+    const layer = prompt('Слой / подпись (необязательно):', entry.layer || '');
+    entry.known = true;
+    entry.name = name;
+    entry.layer = layer || '';
+    entry.value = entry.value || 0;
+    entry.max = entry.max || 10;
+    render();
+    await persist();
+    return;
+  }
+
+  const editScaleBtn = ev.target.closest('[data-edit-scale]');
+  if (editScaleBtn) {
+    openScaleModal(editScaleBtn.dataset.editScale, editScaleBtn.dataset.kind);
+    return;
+  }
+});
+
+document.getElementById('addKnownBtn').addEventListener('click', async () => {
+  const name = prompt('Название поселения:');
+  if (!name) return;
+  const layer = prompt('Слой / подпись:', '') || '';
+  state.settlements.push({ id: makeId(), name, layer, max: 10, value: 0, known: true, scale: null });
+  render();
+  await persist();
+});
+
+document.getElementById('addUnknownBtn').addEventListener('click', async () => {
+  const layer = prompt('Слой / подпись для скрытого поселения (необязательно):', '') || '';
+  state.settlements.push({ id: makeId(), name: '???', layer, max: 10, value: 0, known: false });
+  render();
+  await persist();
+});
+
+document.getElementById('addFactionKnownBtn').addEventListener('click', async () => {
+  const name = prompt('Название гильдии:');
+  if (!name) return;
+  const layer = prompt('Подпись (необязательно):', '') || '';
+  state.factions.push({ id: makeId(), name, layer, max: 10, value: 0, known: true, scale: null });
+  render();
+  await persist();
+});
+
+document.getElementById('addFactionUnknownBtn').addEventListener('click', async () => {
+  const layer = prompt('Подпись для скрытой гильдии (необязательно):', '') || '';
+  state.factions.push({ id: makeId(), name: '???', layer, max: 10, value: 0, known: false });
+  render();
+  await persist();
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `letopis-reputacii-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importInput').click();
+});
+
+document.getElementById('importInput').addEventListener('change', (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!parsed || !Array.isArray(parsed.settlements)) throw new Error('bad format');
+      const normalize = (e) => ({
+        id: e.id || makeId(), name: e.name || '???', layer: e.layer || '',
+        max: typeof e.max === 'number' ? e.max : 10,
+        value: typeof e.value === 'number' ? e.value : 0,
+        known: !!e.known,
+        scale: (Array.isArray(e.scale) && e.scale.length === 11) ? e.scale : null
+      });
+      state = {
+        settlements: parsed.settlements.map(normalize),
+        factions: Array.isArray(parsed.factions) ? parsed.factions.map(normalize) : []
+      };
+      render();
+      await persist();
+    } catch (err) {
+      alert('Не удалось загрузить файл: это не сохранение Летописи Репутации.');
+    }
+    ev.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.panel).classList.add('active');
+  });
+});
+
+// ===== модалка редактирования шкалы =====
+let editingScale = null; // { id, kind }
+
+function openScaleModal(id, kind) {
+  const entry = findEntry(id, kind);
+  if (!entry) return;
+  editingScale = { id, kind };
+  const scale = scaleFor(entry);
+  document.getElementById('scaleModalTitle').textContent = `Шкала: ${entry.name}`;
+  document.getElementById('scaleTextarea').value = scale.map((line, i) => `${i}: ${line}`).join('\n');
+  document.getElementById('scaleModal').classList.add('active');
+}
+
+function closeScaleModal() {
+  document.getElementById('scaleModal').classList.remove('active');
+  editingScale = null;
+}
+
+document.getElementById('scaleCancelBtn').addEventListener('click', closeScaleModal);
+document.getElementById('scaleModal').addEventListener('click', (ev) => {
+  if (ev.target.id === 'scaleModal') closeScaleModal();
+});
+
+document.getElementById('scaleSaveBtn').addEventListener('click', async () => {
+  if (!editingScale) return;
+  const entry = findEntry(editingScale.id, editingScale.kind);
+  if (!entry) return;
+  const raw = document.getElementById('scaleTextarea').value;
+  const lines = raw.split('\n');
+  const newScale = scaleFor(entry).slice();
+  lines.forEach(line => {
+    const m = line.match(/^\s*(\d+)\s*:\s*(.*)$/);
+    if (m) {
+      const idx = parseInt(m[1], 10);
+      if (idx >= 0 && idx <= 10) newScale[idx] = m[2].trim();
+    }
+  });
+  entry.scale = newScale;
+  render();
+  closeScaleModal();
+  await persist();
+});
+
+function setupAshField() {
+  const field = document.getElementById('ashField');
+  for (let i = 0; i < 36; i++) {
+    const m = document.createElement('div');
+    m.className = 'ash-mote';
+    m.style.left = (Math.random() * 100) + 'vw';
+    m.style.animationDuration = (9 + Math.random() * 12) + 's';
+    m.style.animationDelay = (Math.random() * -20) + 's';
+    m.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+    m.style.opacity = 0.15 + Math.random() * 0.35;
+    field.appendChild(m);
+  }
+}
+
+async function init() {
+  setupAshField();
+
+  const role = await OBR.player.getRole();
+  isGM = role === 'GM';
+  document.body.classList.toggle('gm-mode', isGM);
+  const badge = document.getElementById('roleBadge');
+  badge.textContent = isGM ? 'Режим Ведущего · редактирование включено' : 'Режим Игрока · только просмотр';
+  badge.classList.toggle('gm', isGM);
+
+  const metadata = await OBR.room.getMetadata();
+  state = metadata[METADATA_KEY] || defaultState;
+  render();
+
+  if (!metadata[METADATA_KEY] && isGM) {
+    await persist();
+  }
+
+  OBR.room.onMetadataChange((newMetadata) => {
+    const incoming = newMetadata[METADATA_KEY];
+    if (incoming) {
+      state = incoming;
+      render();
+    }
+  });
+
+  OBR.player.onChange((player) => {
+    const nowGM = player.role === 'GM';
+    if (nowGM !== isGM) {
+      isGM = nowGM;
+      document.body.classList.toggle('gm-mode', isGM);
+      badge.textContent = isGM ? 'Режим Ведущего · редактирование включено' : 'Режим Игрока · только просмотр';
+      badge.classList.toggle('gm', isGM);
+    }
+  });
+}
+
+OBR.onReady(() => { init(); });
+</script>
+
+</body>
+</html>
